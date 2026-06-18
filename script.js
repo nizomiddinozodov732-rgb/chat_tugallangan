@@ -1,4 +1,11 @@
-const socket = io(); // Use default polling -> websocket upgrade
+// Railway server URL (o'zingizning Railway URL-ni qo'ying)
+const SERVER_URL = window.location.hostname === 'localhost' 
+    ? '/' 
+    : 'https://chattugallangan-production.up.railway.app';
+
+const socket = io(SERVER_URL, {
+    transports: ['websocket', 'polling']
+});
 
 socket.on('connect', () => {
     console.log('Socket.io serverga ulandi:', socket.id);
