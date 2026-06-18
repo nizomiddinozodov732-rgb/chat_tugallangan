@@ -264,12 +264,23 @@ function handleLogin(e) {
     e.preventDefault();
     const password = elements.login.password.value.trim();
 
-    if (!socket.connected) {
-        alert("Server bilan aloqa yo'q! Kuting yoki sahifani yangilang.");
-        return;
-    }
-    
+    // Disable button to prevent multiple clicks
+    const submitBtn = elements.login.form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Kutilmoqda... <i class="fas fa-spinner fa-spin"></i>';
+    submitBtn.disabled = true;
+
+    // Timeout in case server doesn't respond
+    const timeout = setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        alert("Serverdan javob kelmadi. Internet aloqangizni tekshiring yoki sahifani yangilang.");
+    }, 10000);
+
     socket.emit('verify-login', { password }, (res) => {
+        clearTimeout(timeout);
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
         if (res.success) {
             elements.login.error.classList.remove('show');
             
