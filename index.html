@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat & Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Theme Toggle Floating Button -->
+    <button id="theme-toggle" class="floating-btn" title="Temani o'zgartirish">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen" class="screen active">
+        <div class="login-card glass-panel">
+            <div class="logo-area">
+                <i class="fas fa-comment-dots logo-icon"></i>
+                <h2>Tizimga Kirish</h2>
+            </div>
+            
+            <div class="notification-badge" id="login-notification">
+                <i class="fas fa-bell"></i> Yangi xabarlar: <span id="login-msg-count">0</span>
+            </div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password-input" placeholder="Parolni kiriting..." required autocomplete="current-password">
+                </div>
+                <div class="error-message" id="login-error">Noto'g'ri parol kiritildi!</div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Kirish <i class="fas fa-sign-in-alt"></i></button>
+                    <button type="button" id="clear-btn" class="btn btn-secondary">Tozalash <i class="fas fa-eraser"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD SCREEN -->
+    <div id="dashboard-screen" class="screen hidden">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar glass-panel">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=U&background=random" alt="Avatar" id="user-avatar">
+                        <div class="status-indicator online"></div>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="display-username">Foydalanuvchi</h3>
+                        <span class="role-badge" id="display-role">User</span>
+                    </div>
+                </div>
+
+                <nav class="side-nav">
+                    <a href="#" class="nav-item active" data-target="chat-view"><i class="fas fa-comment"></i> Chat</a>
+                    <a href="#" class="nav-item admin-only hidden" data-target="admin-view"><i class="fas fa-users-cog"></i> Admin Panel</a>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <button id="logout-btn" class="btn btn-danger btn-full"><i class="fas fa-sign-out-alt"></i> Chiqish</button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                
+                <!-- Chat View -->
+                <div id="chat-view" class="view-section active">
+                    <div class="chat-header glass-panel">
+                        <div class="chat-info">
+                            <h2>Umumiy Chat</h2>
+                            <p>Online foydalanuvchilar: <span id="online-count">3</span></p>
+                        </div>
+                        <div class="call-actions">
+                            <button class="call-btn audio-call" id="start-audio-call" title="Audio Qo'ng'iroq"><i class="fas fa-phone-alt"></i></button>
+                            <button class="call-btn video-call" id="start-video-call" title="Video Qo'ng'iroq"><i class="fas fa-video"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- Messages will be injected here -->
+                    </div>
+
+                    <div class="chat-input-area glass-panel" id="drop-zone">
+                        <div class="file-preview-container hidden" id="file-preview-container">
+                            <button class="close-preview" id="close-preview" type="button"><i class="fas fa-times"></i></button>
+                            <div id="file-preview-content"></div>
+                        </div>
+                        <form id="chat-form">
+                            <label for="file-upload" class="attach-btn" title="Fayl biriktirish (rasm/video)">
+                                <i class="fas fa-paperclip"></i>
+                            </label>
+                            <input type="file" id="file-upload" accept="image/*,video/*" hidden>
+                            
+                            <input type="text" id="message-input" placeholder="Xabar yozing... (yoki faylni shu yerga tashlang)">
+                            <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Admin View -->
+                <div id="admin-view" class="view-section hidden">
+                    <div class="admin-header glass-panel">
+                        <h2>Admin Panel</h2>
+                        <div class="stats-cards">
+                            <div class="stat-card glass-panel">
+                                <i class="fas fa-users"></i>
+                                <div class="stat-info">
+                                    <h3>Foydalanuvchilar</h3>
+                                    <span id="stat-users">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <i class="fas fa-envelope"></i>
+                                <div class="stat-info">
+                                    <h3>Jami Xabarlar</h3>
+                                    <span id="stat-messages">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-content glass-panel mt-4">
+                        <div class="admin-toolbar">
+                            <h3>Foydalanuvchilarni Boshqarish</h3>
+                            <button id="add-user-btn" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> Yangi Qo'shish</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Ism</th>
+                                        <th>Rol</th>
+                                        <th>Status</th>
+                                        <th>Harakatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- Users injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="admin-content glass-panel mt-4">
+                        <div class="admin-toolbar">
+                            <h3>Tizim Parollarini Boshqarish</h3>
+                        </div>
+                        <form id="change-passwords-form" style="display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin-top: 15px;">
+                            <div class="input-group">
+                                <label style="display:block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Foydalanuvchilar paroli</label>
+                                <input type="text" id="admin-user-pass-input" placeholder="Yangi user paroli" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary);">
+                            </div>
+                            <div class="input-group">
+                                <label style="display:block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Admin paroli</label>
+                                <input type="text" id="admin-admin-pass-input" placeholder="Yangi admin paroli" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary);">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Saqlash</button>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Call Modals -->
+    <!-- Incoming Call -->
+    <div id="incoming-call-modal" class="modal hidden">
+        <div class="modal-content call-card glass-panel text-center">
+            <div class="caller-avatar pulse-anim mx-auto">
+                <img src="https://ui-avatars.com/api/?name=A&background=random" alt="Caller">
+            </div>
+            <h3 id="caller-name" class="mt-4">Super Admin</h3>
+            <p id="call-type-text">Video qo'ng'iroq qilmoqda...</p>
+            
+            <div class="call-buttons mt-4">
+                <button id="accept-call" class="btn-circular accept"><i class="fas fa-phone"></i></button>
+                <button id="reject-call" class="btn-circular reject"><i class="fas fa-phone-slash"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Call -->
+    <div id="active-call-modal" class="modal hidden">
+        <div class="modal-content active-call-card glass-panel">
+            <div class="call-header">
+                <h3>Suhbatlashilmoqda...</h3>
+                <span id="call-duration">00:00</span>
+            </div>
+            
+            <div class="call-video-area">
+                <div class="main-video bg-dark">
+                    <video id="remote-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;" class="hidden"></video>
+                    <div class="placeholder-video" id="remote-placeholder"><i class="fas fa-user fa-4x"></i></div>
+                </div>
+                <div class="self-video bg-dark">
+                    <video id="local-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;" class="hidden"></video>
+                    <div class="placeholder-video" id="local-placeholder"><i class="fas fa-user fa-2x"></i></div>
+                </div>
+            </div>
+
+            <div class="call-controls mt-4">
+                <button class="btn-circular control active" id="toggle-mic"><i class="fas fa-microphone"></i></button>
+                <button class="btn-circular control active" id="toggle-cam"><i class="fas fa-video"></i></button>
+                <button class="btn-circular reject" id="end-call"><i class="fas fa-phone-slash"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="modal hidden">
+        <div class="modal-content glass-panel" style="max-width: 400px;">
+            <h3>Yangi Foydalanuvchi</h3>
+            <form id="add-user-form" class="mt-4">
+                <div class="input-group">
+                    <input type="text" id="new-user-name" placeholder="Ism" required>
+                </div>
+                <div class="input-group mt-3">
+                    <select id="new-user-role" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary);">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="button-group mt-4" style="justify-content: flex-end;">
+                    <button type="button" id="cancel-add-user" class="btn btn-secondary">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
