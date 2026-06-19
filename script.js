@@ -134,6 +134,12 @@ function setupSocketListeners() {
         }
     });
 
+    // Chat History (eski xabarlarni yuklash)
+    socket.on('chat-history', (history) => {
+        state.messages = history;
+        renderMessages();
+    });
+
     // Users update
     socket.on('users-update', (users) => {
         state.users = users;

@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
@@ -21,18 +22,54 @@ app.use((req, res, next) => {
 });
 
 // Statik fayllarni serve qilish
-
+app.use(express.static(__dirname));
 // Ulangan foydalanuvchilar
 const users = new Map();
 
+const DATA_FILE = path.join(__dirname, 'data.json');
+
 // Xabarlar tarixi (serverda saqlanadi)
 let chatHistory = [];
-
 // Tizim parollari
 let passwords = {
     adminPassword: '123',
     userPassword: '123'
 };
+
+// Saqlangan ma'lumotlarni o'qish
+if (fs.existsSync(DATA_FILE)) {
+    try {
+        const rawData = fs.readFileSync(DATA_FILE);
+        const parsed = JSON.parse(rawData);
+        chatHistory = parsed.chatHistory || [];
+        passwords = parsed.passwords || passwords;
+    } catch (err) {
+        console.error("Ma'lumotlarni o'qishda xatolik:", err);
+    }
+}
+
+function saveData() {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify({ chatHistory, passwords }, null, 2));
+    } catch (err) {
+        console.error("Ma'lumotlarni saqlashda xatolik:", err);
+    }
+}
+
+// Har 1 soatda xabarlarni tekshirib, 1 haftadan eskilari avtomatik o'chiriladi
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+setInterval(() => {
+    const now = Date.now();
+    const before = chatHistory.length;
+    chatHistory = chatHistory.filter(msg => (now - msg.id) <= ONE_WEEK_MS);
+    
+    // Agar eski xabarlar o'chirilgan bo'lsa, barcha mijozlarga admin panel uchun xabar sonini yangilashni aytamiz
+    if (chatHistory.length < before) {
+        saveData();
+        io.emit('history-count', chatHistory.length);
+        console.log(`Avtomatik tozalash: ${before - chatHistory.length} ta eski xabar o'chirildi.`);
+    }
+}, 60 * 60 * 1000); // 1 soatda bir marta ishlaydi
 
 io.on('connection', (socket) => {
     console.log('Foydalanuvchi ulandi:', socket.id);
@@ -42,6 +79,7 @@ io.on('connection', (socket) => {
     // Xabarni barchaga tarqatish va serverda saqlash
     socket.on('chat-message', (msg) => {
         chatHistory.push(msg);
+        saveData();
         io.emit('chat-message', msg);
         // Admin uchun xabar sonini yangilash
         io.emit('history-count', chatHistory.length);
@@ -55,6 +93,7 @@ io.on('connection', (socket) => {
     // Login sahifasidagi "Tozalash" — serverdan ham o'chiriladi (MAXFIY)
     socket.on('privacy-clear', () => {
         chatHistory = [];
+        saveData();
         // Barcha ulangan foydalanuvchilarning ekranini ham tozalash
         io.emit('chat-cleared');
         io.emit('history-count', 0);
@@ -68,6 +107,7 @@ io.on('connection', (socket) => {
         const before = chatHistory.length;
         chatHistory = chatHistory.filter(m => m.id !== msgId);
         if (chatHistory.length < before) {
+            saveData();
             io.emit('message-deleted', msgId);
             io.emit('history-count', chatHistory.length);
             callback({ success: true });
@@ -79,6 +119,7 @@ io.on('connection', (socket) => {
     // Barcha xabarlarni o'chirish (Super Admin)
     socket.on('admin-clear-all', (callback) => {
         chatHistory = [];
+        saveData();
         io.emit('chat-cleared');
         io.emit('history-count', 0);
         callback({ success: true });
@@ -121,6 +162,7 @@ io.on('connection', (socket) => {
     socket.on('update-passwords', (data, callback) => {
         passwords.userPassword = data.userPassword;
         passwords.adminPassword = data.adminPassword;
+        saveData();
         console.log('Parollar yangilandi');
         callback({ success: true });
     });
