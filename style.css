@@ -780,7 +780,8 @@ body {
 
     /* Floating button */
     .floating-btn {
-        bottom: 70px; /* Sidebar pastga tushgani uchun yuqoriroq */
+        bottom: 130px; /* Input maydonidan teparoqda turishi uchun */
+        right: 15px;
         width: 42px;
         height: 42px;
         font-size: 1.2rem;
@@ -829,7 +830,7 @@ body {
     .call-controls { gap: 10px; }
 
     .floating-btn {
-        bottom: 65px;
+        bottom: 120px;
         right: 12px;
         width: 38px;
         height: 38px;
