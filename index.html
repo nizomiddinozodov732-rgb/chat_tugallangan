@@ -242,6 +242,12 @@
         </div>
     </div>
 
+    <!-- Image Lightbox Modal -->
+    <div id="image-modal" class="modal hidden" style="z-index: 3000;">
+        <span id="close-image-modal" style="position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">&times;</span>
+        <img id="modal-image" src="" alt="Enlarged" style="max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: popIn 0.3s ease;">
+    </div>
+
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>

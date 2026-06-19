@@ -240,6 +240,27 @@ function setupEventListeners() {
         }
     });
 
+    // Rasm ustiga bosganda kattalashtirish (Lightbox)
+    elements.chat.container.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG' && e.target.closest('.message')) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            if (modal && modalImg) {
+                modalImg.src = e.target.src;
+                modal.classList.remove('hidden');
+            }
+        }
+    });
+
+    const closeImageModal = document.getElementById('close-image-modal');
+    const imageModal = document.getElementById('image-modal');
+    if (closeImageModal && imageModal) {
+        closeImageModal.addEventListener('click', () => imageModal.classList.add('hidden'));
+        imageModal.addEventListener('click', (e) => {
+            if (e.target.id === 'image-modal') imageModal.classList.add('hidden');
+        });
+    }
+
     // Call Buttons
     elements.call.audioBtn.addEventListener('click', () => initiateCall(false));
     elements.call.videoBtn.addEventListener('click', () => initiateCall(true));
