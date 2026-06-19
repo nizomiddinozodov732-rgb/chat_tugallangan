@@ -652,17 +652,202 @@ body {
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(237, 66, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* Responsive */
+/* Responsive — Tablet */
 @media (max-width: 768px) {
-    .app-container { width: 100vw; height: 100vh; border-radius: 0; border: none; flex-direction: column; gap: 0; }
-    .sidebar { width: 100%; flex-direction: row; padding: 10px; height: 70px; border-bottom: 1px solid var(--border-color); align-items: center; z-index: 10; }
-    .user-profile { margin: 0; padding: 0; border: none; }
+    .app-container {
+        width: 100vw;
+        height: 100vh;
+        max-width: 100%;
+        border-radius: 0;
+        border: none;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .sidebar {
+        width: 100%;
+        flex-direction: row;
+        padding: 8px 12px;
+        height: 60px;
+        border-bottom: 1px solid var(--border-color);
+        align-items: center;
+        z-index: 10;
+        border-radius: 0;
+        order: 2; /* Pastga tushirish */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .main-content {
+        order: 1;
+        height: calc(100vh - 60px);
+        padding-bottom: 0;
+    }
+
+    .user-profile {
+        margin: 0;
+        padding: 0;
+        border: none;
+        gap: 8px;
+    }
     .user-info { display: none; }
-    .side-nav { flex-direction: row; justify-content: center; }
-    .nav-item span { display: none; } /* Hide text, keep icons */
-    .nav-item { padding: 10px; }
-    .sidebar-footer { display: none; } /* Hide logout text, maybe just icon */
-    .stats-cards { flex-direction: column; }
-    .active-call-card { width: 100vw; height: 100vh; border-radius: 0; }
-    .self-video { width: 100px; height: 150px; }
+    .avatar { width: 35px; height: 35px; }
+
+    .side-nav {
+        flex-direction: row;
+        justify-content: center;
+        flex: 1;
+        gap: 5px;
+    }
+    .nav-item {
+        padding: 8px 12px;
+        font-size: 1.1rem;
+        border-radius: 12px;
+    }
+    .nav-item span { display: none; }
+
+    .sidebar-footer {
+        margin-top: 0;
+        display: flex;
+    }
+    .sidebar-footer .btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    /* Login */
+    .login-card {
+        max-width: 90%;
+        padding: 1.5rem;
+        margin: 15px;
+    }
+    .logo-icon { font-size: 2.5rem; }
+    .login-card h2 { font-size: 1.3rem; }
+
+    /* Chat */
+    .chat-header {
+        padding: 10px 15px;
+        border-radius: 0;
+    }
+    .chat-info h2 { font-size: 1rem; }
+    .chat-info p { font-size: 0.75rem; }
+
+    .call-btn { width: 35px; height: 35px; font-size: 0.9rem; }
+
+    .chat-messages {
+        padding: 10px;
+        gap: 10px;
+    }
+    .message { max-width: 85%; }
+    .message-content { padding: 10px 14px; font-size: 0.9rem; }
+    .message-time { font-size: 0.65rem; }
+
+    .chat-input-area {
+        padding: 8px;
+        border-radius: 0;
+    }
+    #chat-form { padding: 3px 8px; }
+    #message-input { padding: 8px; font-size: 0.9rem; }
+    .attach-btn, .send-btn { width: 36px; height: 36px; font-size: 1rem; }
+
+    /* Admin */
+    .admin-header { padding: 12px 15px; flex-direction: column; gap: 10px; }
+    .stats-cards { flex-direction: column; gap: 10px; }
+    .stat-card { padding: 12px; gap: 12px; }
+    .stat-card i { font-size: 1.5rem; padding: 10px; }
+    .stat-info span { font-size: 1.3rem; }
+
+    .admin-content { padding: 12px; }
+    .admin-toolbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .users-table th, .users-table td { padding: 10px 8px; font-size: 0.85rem; }
+
+    /* Call Modal */
+    .active-call-card {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        padding: 10px;
+    }
+    .self-video { width: 100px; height: 130px; bottom: 10px; right: 10px; }
+    .call-controls { gap: 12px; padding-top: 10px; }
+    .btn-circular { width: 50px; height: 50px; font-size: 1.2rem; }
+
+    .call-card { width: 90%; padding: 25px; }
+
+    /* Floating button */
+    .floating-btn {
+        bottom: 70px; /* Sidebar pastga tushgani uchun yuqoriroq */
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+
+    /* View sections */
+    .view-section { gap: 0; }
+    .chat-header, .admin-header { border-radius: 0; }
+    .admin-content { border-radius: 12px; margin: 8px; }
+
+    /* Glass panel border radius fix */
+    .glass-panel { border-radius: 0; }
+    .login-card.glass-panel { border-radius: 16px; }
+    .stat-card.glass-panel { border-radius: 12px; }
+    .modal-content.glass-panel { border-radius: 16px; }
+}
+
+/* Responsive — Kichik telefonlar */
+@media (max-width: 480px) {
+    .login-card {
+        max-width: 95%;
+        padding: 1.2rem;
+        gap: 1rem;
+    }
+    .logo-icon { font-size: 2rem; }
+    .login-card h2 { font-size: 1.1rem; }
+    .notification-badge { padding: 0.5rem; font-size: 0.8rem; }
+
+    .input-group input { padding: 10px 10px 10px 40px; font-size: 0.9rem; }
+    .btn { padding: 10px; font-size: 0.9rem; }
+
+    .sidebar { height: 55px; padding: 5px 8px; }
+    .main-content { height: calc(100vh - 55px); }
+    .avatar { width: 30px; height: 30px; }
+    .nav-item { padding: 6px 10px; font-size: 1rem; }
+
+    .chat-messages { padding: 8px; gap: 8px; }
+    .message { max-width: 90%; }
+    .message-content { padding: 8px 12px; font-size: 0.85rem; }
+
+    #message-input { font-size: 0.85rem; }
+    .attach-btn, .send-btn { width: 32px; height: 32px; font-size: 0.9rem; }
+
+    .self-video { width: 80px; height: 110px; }
+    .btn-circular { width: 45px; height: 45px; font-size: 1.1rem; }
+    .call-controls { gap: 10px; }
+
+    .floating-btn {
+        bottom: 65px;
+        right: 12px;
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+    }
+
+    /* Admin panel parollar formasi */
+    #change-passwords-form { max-width: 100% !important; }
+
+    .table-responsive { font-size: 0.8rem; }
+    .users-table th, .users-table td { padding: 8px 5px; }
+}
+
+/* Landscape telefon (yotiq holat) */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar { height: 50px; }
+    .main-content { height: calc(100vh - 50px); }
+    .active-call-card { padding: 5px; }
+    .call-video-area { flex-direction: row; }
+    .self-video { width: 120px; height: 90px; }
+    .call-controls { padding-top: 5px; }
+    .btn-circular { width: 40px; height: 40px; font-size: 1rem; }
 }
