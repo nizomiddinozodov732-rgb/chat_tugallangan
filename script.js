@@ -1,9 +1,5 @@
-// Railway server URL (o'zingizning Railway URL-ni qo'ying)
-const SERVER_URL = window.location.hostname === 'localhost' 
-    ? '/' 
-    : 'https://chattugallangan-production.up.railway.app';
-
-const socket = io(SERVER_URL, {
+// Domen nomiga qaramasdan avtomatik ulanish (Netlify kerak emas, faqat Railway o'zi yetarli)
+const socket = io('/', {
     transports: ['websocket', 'polling']
 });
 
