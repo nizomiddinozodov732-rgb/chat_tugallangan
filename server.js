@@ -173,7 +173,8 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('call-made', {
             offer: data.offer,
             socket: socket.id,
-            caller: data.caller
+            caller: data.caller,
+            callType: data.callType || 'video'
         });
     });
 

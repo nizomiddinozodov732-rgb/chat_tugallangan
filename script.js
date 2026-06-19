@@ -14,11 +14,17 @@ let localStream;
 let peerConnection;
 let isCaller = false;
 let callActive = false;
+let screenStream = null; // Ekran ulash uchun
+let callType = 'video'; // 'audio' yoki 'video'
 
-// WebRTC Configuration (using Google's public STUN server)
+// WebRTC Configuration (ko'p STUN serverlar — tez va barqaror ulanish)
 const peerConnectionConfig = {
-    'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'}
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' }
     ]
 };
 
@@ -159,7 +165,7 @@ function setupSocketListeners() {
         
         // Modal shows incoming call
         elements.call.callerName.textContent = data.caller.name || 'Foydalanuvchi';
-        elements.call.callTypeText.textContent = 'Qo\'ng\'iroq qilmoqda...';
+        elements.call.callTypeText.textContent = data.callType === 'video' ? 'Video qo\'ng\'iroq qilmoqda...' : 'Audio qo\'ng\'iroq qilmoqda...';
         elements.call.incomingModal.classList.remove('hidden');
         
         // Store incoming call info globally to accept/reject
@@ -230,6 +236,12 @@ function setupEventListeners() {
     
     elements.call.toggleMic.addEventListener('click', toggleMic);
     elements.call.toggleCam.addEventListener('click', toggleCam);
+
+    // Ekran ulash tugmasi
+    const screenShareBtn = document.getElementById('toggle-screen');
+    if (screenShareBtn) {
+        screenShareBtn.addEventListener('click', toggleScreenShare);
+    }
 
     // Xavfsizlik: Boshqa oynaga (tab) o'tganda yoki brauzer yopilganda avtomatik chiqib ketish
     document.addEventListener('visibilitychange', () => {
@@ -455,14 +467,38 @@ function scrollToBottom() {
 // --- WEBRTC CALL FUNCTIONS ---
 
 async function getMedia(videoEnabled) {
+    // HD sifatli video va shovqin to'siladigan audio sozlamalari
+    const constraints = {
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000
+        },
+        video: videoEnabled ? {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+            facingMode: 'user'
+        } : false
+    };
+
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
         elements.call.localVideo.srcObject = localStream;
         elements.call.localVideo.classList.remove('hidden');
         elements.call.localPlaceholder.classList.add('hidden');
     } catch (err) {
         console.error('Media error:', err);
-        alert("Kamera yoki mikrofonga ruxsat berilmadi!");
+        if (err.name === 'NotAllowedError') {
+            alert('⚠️ Kamera va mikrofonga ruxsat berilmadi!\n\nBrauzer sozlamalaridan ruxsat bering:\n1. Manzil satrining chap tomonidagi qulf belgisini bosing\n2. Kamera va Mikrofon uchun "Ruxsat berish" ni tanlang\n3. Sahifani yangilang');
+        } else if (err.name === 'NotFoundError') {
+            alert('⚠️ Kamera yoki mikrofon topilmadi!\n\nQurilmangizga kamera va mikrofon ulangan ekanligini tekshiring.');
+        } else if (err.name === 'NotReadableError') {
+            alert('⚠️ Kamera yoki mikrofon boshqa dastur tomonidan ishlatilmoqda!\n\nBoshqa video dasturlarni yoping va qayta urinib ko\'ring.');
+        } else {
+            alert('⚠️ Kamera/mikrofonga ulanishda xatolik yuz berdi: ' + err.message);
+        }
     }
 }
 
@@ -489,29 +525,49 @@ function createPeerConnection() {
             socket.emit('ice-candidate', { candidate: event.candidate });
         }
     };
+
+    // Ulanish holati o'zgarganda
+    peerConnection.onconnectionstatechange = () => {
+        console.log('Aloqa holati:', peerConnection.connectionState);
+        if (peerConnection.connectionState === 'failed') {
+            alert('⚠️ Aloqa uzildi. Qayta urinib ko\'ring.');
+            closeCall();
+        }
+    };
 }
 
 async function initiateCall(videoEnabled) {
+    callType = videoEnabled ? 'video' : 'audio';
     isCaller = true;
     elements.call.activeModal.classList.remove('hidden');
     await getMedia(videoEnabled);
+    if (!localStream) {
+        elements.call.activeModal.classList.add('hidden');
+        return; // Ruxsat berilmagan bo'lsa, qo'ng'iroq boshlanmaydi
+    }
     createPeerConnection();
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    socket.emit('call-user', { offer: offer, caller: state.currentUser });
+    socket.emit('call-user', { offer: offer, caller: state.currentUser, callType: callType });
 }
 
 async function acceptCall() {
     elements.call.incomingModal.classList.add('hidden');
     elements.call.activeModal.classList.remove('hidden');
     
-    // Assume video call for simplicity, or we could pass type in data
-    await getMedia(true); 
+    const data = window.incomingCallData;
+    const isVideo = data.callType === 'video';
+    callType = data.callType || 'video';
+    
+    await getMedia(isVideo);
+    if (!localStream) {
+        elements.call.activeModal.classList.add('hidden');
+        return; // Ruxsat berilmagan bo'lsa, qo'ng'iroqni qabul qilish to'xtatiladi
+    }
     createPeerConnection();
 
-    const data = window.incomingCallData;
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
     
     const answer = await peerConnection.createAnswer();
@@ -525,7 +581,7 @@ async function acceptCall() {
 
 function rejectCall() {
     elements.call.incomingModal.classList.add('hidden');
-    // We could emit a reject event
+    socket.emit('end-call');
 }
 
 function handleEndCall() {
@@ -542,14 +598,108 @@ function closeCall() {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
     }
+    if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+    }
     elements.call.activeModal.classList.add('hidden');
     elements.call.localVideo.classList.add('hidden');
     elements.call.remoteVideo.classList.add('hidden');
     elements.call.localPlaceholder.classList.remove('hidden');
     elements.call.remotePlaceholder.classList.remove('hidden');
+    
+    // Ekran ulash tugmasini qaytarish
+    const screenBtn = document.getElementById('toggle-screen');
+    if (screenBtn) {
+        screenBtn.classList.remove('sharing');
+        screenBtn.querySelector('i').className = 'fas fa-desktop';
+    }
+    
     stopCallTimer();
     callActive = false;
     isCaller = false;
+}
+
+// --- EKRAN ULASH (SCREEN SHARING) ---
+async function toggleScreenShare() {
+    const screenBtn = document.getElementById('toggle-screen');
+    
+    if (screenStream) {
+        // Ekran ulashni to'xtatish — kameraga qaytish
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+        
+        // Kamerani qayta yoqish
+        try {
+            const camStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30 },
+                    facingMode: 'user'
+                }
+            });
+            const camTrack = camStream.getVideoTracks()[0];
+            
+            // PeerConnection'dagi video trackni almashtirish
+            const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (sender) {
+                await sender.replaceTrack(camTrack);
+            }
+            
+            // Lokal video'ni yangilash
+            const oldVideoTrack = localStream.getVideoTracks()[0];
+            if (oldVideoTrack) oldVideoTrack.stop();
+            localStream.removeTrack(oldVideoTrack);
+            localStream.addTrack(camTrack);
+            elements.call.localVideo.srcObject = localStream;
+            
+        } catch (err) {
+            console.error('Kameraga qaytishda xatolik:', err);
+        }
+        
+        screenBtn.classList.remove('sharing');
+        screenBtn.querySelector('i').className = 'fas fa-desktop';
+        
+    } else {
+        // Ekranni ulashni boshlash
+        try {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    cursor: 'always',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 30 }
+                },
+                audio: false
+            });
+            
+            const screenTrack = screenStream.getVideoTracks()[0];
+            
+            // PeerConnection'dagi video trackni ekran bilan almashtirish
+            const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (sender) {
+                await sender.replaceTrack(screenTrack);
+            }
+            
+            // Lokal video'ni ekranga almashtirish
+            elements.call.localVideo.srcObject = screenStream;
+            
+            screenBtn.classList.add('sharing');
+            screenBtn.querySelector('i').className = 'fas fa-stop-circle';
+            
+            // Foydalanuvchi brauzerdan ekran ulashni to'xtatsa
+            screenTrack.onended = () => {
+                toggleScreenShare(); // Kameraga qaytish
+            };
+            
+        } catch (err) {
+            console.error('Ekran ulash xatosi:', err);
+            if (err.name !== 'AbortError') {
+                alert('⚠️ Ekranni ulash uchun ruxsat berilmadi!');
+            }
+        }
+    }
 }
 
 function startCallTimer() {
