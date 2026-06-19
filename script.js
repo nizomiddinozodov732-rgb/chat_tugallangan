@@ -229,6 +229,17 @@ function setupEventListeners() {
     elements.chat.fileUpload.addEventListener('change', handleFileSelect);
     elements.chat.closePreview.addEventListener('click', clearFilePreview);
 
+    // Rasmlarni clipboarddan nusxalab (paste) joylash
+    elements.chat.input.addEventListener('paste', (e) => {
+        if (e.clipboardData && e.clipboardData.files.length > 0) {
+            const file = e.clipboardData.files[0];
+            if (file.type.startsWith('image/')) {
+                // Mock an event object to reuse handleFileSelect
+                handleFileSelect({ target: { files: [file] } });
+            }
+        }
+    });
+
     // Call Buttons
     elements.call.audioBtn.addEventListener('click', () => initiateCall(false));
     elements.call.videoBtn.addEventListener('click', () => initiateCall(true));
@@ -396,7 +407,10 @@ function renderMessages() {
             contentHtml = `<img src="${msg.file}" alt="image" style="max-width: 250px;">`;
             if (msg.text) contentHtml += `<div class="message-content">${escapeHTML(msg.text)}</div>`;
         } else if (msg.type === 'video') {
-            contentHtml = `<video src="${msg.file}" controls style="max-width: 250px;"></video>`;
+            contentHtml = `<video src="${msg.file}" controls style="max-width: 250px; border-radius: 8px;"></video>`;
+            if (msg.text) contentHtml += `<div class="message-content">${escapeHTML(msg.text)}</div>`;
+        } else if (msg.type === 'audio') {
+            contentHtml = `<audio src="${msg.file}" controls style="max-width: 250px;"></audio>`;
             if (msg.text) contentHtml += `<div class="message-content">${escapeHTML(msg.text)}</div>`;
         }
         
@@ -453,8 +467,8 @@ function finishSendMessage() {
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-        alert('Faqat rasm yoki video yuklashingiz mumkin!');
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+        alert('Faqat rasm, video yoki audio yuklashingiz mumkin!');
         return;
     }
     currentFile = file;
@@ -462,8 +476,10 @@ function handleFileSelect(e) {
     elements.chat.previewContainer.classList.remove('hidden');
     if (file.type.startsWith('image/')) {
         elements.chat.previewContent.innerHTML = `<img src="${objectUrl}" alt="preview">`;
-    } else {
+    } else if (file.type.startsWith('video/')) {
         elements.chat.previewContent.innerHTML = `<video src="${objectUrl}" muted></video>`;
+    } else if (file.type.startsWith('audio/')) {
+        elements.chat.previewContent.innerHTML = `<audio src="${objectUrl}" controls></audio>`;
     }
 }
 
