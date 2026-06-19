@@ -656,7 +656,7 @@ body {
 @media (max-width: 768px) {
     .app-container {
         width: 100vw;
-        height: 100vh;
+        height: 100dvh; /* dvh handles mobile address bars perfectly */
         max-width: 100%;
         border-radius: 0;
         border: none;
@@ -669,21 +669,22 @@ body {
         flex-direction: row;
         padding: 8px 12px;
         height: 60px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: none;
+        border-top: 1px solid var(--border-color); /* Yuqoridan chegara */
         align-items: center;
         z-index: 10;
         border-radius: 0;
-        order: 2; /* Pastga tushirish */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        order: 2; /* Main contentdan keyin kelishi uchun */
+        position: relative; /* Fixed o'rniga relative */
+        background: var(--bg-secondary);
     }
 
     .main-content {
         order: 1;
-        height: calc(100vh - 60px);
+        flex: 1; /* Qolgan barcha bo'shliqni egallaydi */
+        height: calc(100dvh - 60px);
         padding-bottom: 0;
+        overflow: hidden;
     }
 
     .user-profile {
