@@ -50,6 +50,7 @@ const elements = {
     },
     login: {
         form: document.getElementById('login-form'),
+        nameInput: document.getElementById('name-input'),
         password: document.getElementById('password-input'),
         error: document.getElementById('login-error'),
         clearBtn: document.getElementById('clear-btn'),
@@ -203,6 +204,7 @@ function setupEventListeners() {
     // Login Form
     elements.login.form.addEventListener('submit', handleLogin);
     elements.login.clearBtn.addEventListener('click', () => {
+        elements.login.nameInput.value = '';
         elements.login.password.value = '';
         elements.login.error.classList.remove('show');
     });
@@ -298,9 +300,20 @@ function handleLogin(e) {
         if (res.success) {
             elements.login.error.classList.remove('show');
             
-            let name = res.name || 'Foydalanuvchi';
-            if (res.needsName) {
-                name = prompt("Ismingizni kiriting:", "Foydalanuvchi") || "Foydalanuvchi";
+            const enteredName = elements.login.nameInput.value.trim();
+            let name;
+            
+            if (res.role === 'Super Admin') {
+                // Admin uchun ism ixtiyoriy — bo'sh qolsa 'Super Admin' bo'ladi
+                name = enteredName || 'Super Admin';
+            } else {
+                // Oddiy foydalanuvchi uchun ism majburiy
+                if (!enteredName) {
+                    alert('Iltimos, ismingizni kiriting!');
+                    elements.login.nameInput.focus();
+                    return;
+                }
+                name = enteredName;
             }
             
             const user = { name: name, role: res.role, id: Date.now() };
@@ -309,6 +322,7 @@ function handleLogin(e) {
             state.currentUser = user;
             
             elements.login.password.value = '';
+            elements.login.nameInput.value = '';
             state.notificationCount = 0;
             showDashboard();
             socket.emit('user-joined', user);
