@@ -296,12 +296,15 @@ function setupEventListeners() {
         screenShareBtn.addEventListener('click', toggleScreenShare);
     }
 
-    // Xavfsizlik: Boshqa oynaga (tab) o'tganda yoki brauzer yopilganda avtomatik chiqib ketish
+    // Xavfsizlik: Boshqa oynaga (tab) o'tganda avtomatik chiqib ketish o'chirildi
+    // (Foydalanuvchi blok ekranda ham onlayn ko'rinishi uchun)
+    /*
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.isLoggedIn) {
             handleLogout();
         }
     });
+    */
 
     // Parollarni o'zgartirish formasi
     if (elements.admin.changePasswordsForm) {
