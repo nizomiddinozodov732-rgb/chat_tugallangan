@@ -74,7 +74,8 @@ const elements = {
         dropZone: document.getElementById('drop-zone'),
         previewContainer: document.getElementById('file-preview-container'),
         previewContent: document.getElementById('file-preview-content'),
-        closePreview: document.getElementById('close-preview')
+        closePreview: document.getElementById('close-preview'),
+        clearBtn: document.getElementById('clear-chat-btn')
     },
     call: {
         audioBtn: document.getElementById('start-audio-call'),
@@ -228,6 +229,24 @@ function setupEventListeners() {
     elements.chat.form.addEventListener('submit', handleSendMessage);
     elements.chat.fileUpload.addEventListener('change', handleFileSelect);
     elements.chat.closePreview.addEventListener('click', clearFilePreview);
+
+    if (elements.chat.clearBtn) {
+        elements.chat.clearBtn.addEventListener('click', () => {
+            if(confirm("Chatni tozalashni xohlaysizmi?")) {
+                if (state.currentUser && state.currentUser.role === 'Super Admin') {
+                    if(confirm("Barcha uchun o'chirilsinmi?")) {
+                        socket.emit('admin-clear-all', () => {});
+                    } else {
+                        state.messages = [];
+                        renderMessages();
+                    }
+                } else {
+                    state.messages = [];
+                    renderMessages();
+                }
+            }
+        });
+    }
 
     // Rasmlarni clipboarddan nusxalab (paste) joylash
     elements.chat.input.addEventListener('paste', (e) => {
@@ -451,7 +470,12 @@ function handleSendMessage(e) {
 
     // Chatni tozalash buyrug'i tekshiruvi
     if (text.toLowerCase() === '/clear' || text.toLowerCase() === '/tozalash') {
-        socket.emit('clear-chat');
+        if (state.currentUser && state.currentUser.role === 'Super Admin') {
+            socket.emit('admin-clear-all', () => {});
+        } else {
+            state.messages = [];
+            renderMessages();
+        }
         elements.chat.input.value = '';
         return;
     }
